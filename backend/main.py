@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, get_db
@@ -14,11 +15,21 @@ from scheduler import generate_schedule
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Universitet Cədvəl Sistemi")
+app = FastAPI(title="Planify - Universitet Cədvəl Sistemi")
+
+# CORS — FRONTEND_URL env variable varsa onu da əlavə et
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+]
+
+frontend_url = os.environ.get("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,7 +42,7 @@ app.include_router(subjects_router)
 
 @app.get("/")
 def root():
-    return {"message": "Universitet Cədvəl Sistemi API"}
+    return {"message": "Planify API işləyir ✅"}
 
 @app.post("/generate-schedule")
 def generate(db: Session = Depends(get_db)):
@@ -79,9 +90,7 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                     }
                     free_day = day_map.get(str(row[3]).strip().lower(), None)
 
-                existing = db.query(models.Group).filter(
-                    models.Group.name == str(row[0])
-                ).first()
+                existing = db.query(models.Group).filter(models.Group.name == str(row[0])).first()
                 if not existing:
                     db.add(models.Group(
                         name=str(row[0]),
@@ -102,9 +111,7 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                 continue
             try:
                 email = str(row[1]).strip() if row[1] else None
-                existing = db.query(models.Teacher).filter(
-                    models.Teacher.full_name == str(row[0])
-                ).first()
+                existing = db.query(models.Teacher).filter(models.Teacher.full_name == str(row[0])).first()
                 if not existing:
                     db.add(models.Teacher(
                         full_name=str(row[0]),
@@ -127,12 +134,8 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                     "laboratoriya": "laboratory", "laboratory": "laboratory",
                     "adi": "regular", "regular": "regular"
                 }
-                room_type = room_type_map.get(
-                    str(row[2]).strip().lower() if row[2] else "adi", "regular"
-                )
-                existing = db.query(models.Room).filter(
-                    models.Room.name == str(row[0])
-                ).first()
+                room_type = room_type_map.get(str(row[2]).strip().lower() if row[2] else "adi", "regular")
+                existing = db.query(models.Room).filter(models.Room.name == str(row[0])).first()
                 if not existing:
                     db.add(models.Room(
                         name=str(row[0]),
@@ -151,16 +154,11 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
             if not row[0]:
                 continue
             try:
-                teacher = db.query(models.Teacher).filter(
-                    models.Teacher.full_name == str(row[1])
-                ).first()
+                teacher = db.query(models.Teacher).filter(models.Teacher.full_name == str(row[1])).first()
                 if not teacher:
-                    results["errors"].append(
-                        f"Fənn xətası: '{row[1]}' müəllim tapılmadı"
-                    )
+                    results["errors"].append(f"Fənn xətası: '{row[1]}' müəllim tapılmadı")
                     continue
 
-                # Növ
                 subject_type = "normal"
                 if row[6]:
                     type_map = {
@@ -169,22 +167,16 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                     }
                     subject_type = type_map.get(str(row[6]).strip().lower(), "normal")
 
-                # Qruplar — vergüllə ayrılmış
                 group_names = [g.strip() for g in str(row[2]).split(",")]
 
-                # Merged üçün ortaq merge_id
                 merge_id = None
                 if subject_type == "merged":
                     merge_id = f"merge_{row[0]}_{row[1]}_{int(time.time())}"
 
                 for gname in group_names:
-                    group = db.query(models.Group).filter(
-                        models.Group.name == gname
-                    ).first()
+                    group = db.query(models.Group).filter(models.Group.name == gname).first()
                     if not group:
-                        results["errors"].append(
-                            f"Fənn xətası: '{gname}' qrup tapılmadı"
-                        )
+                        results["errors"].append(f"Fənn xətası: '{gname}' qrup tapılmadı")
                         continue
 
                     requires_computer = str(row[4]).lower() in ["bəli", "yes", "true", "1"] if row[4] else False
@@ -192,7 +184,6 @@ async def import_excel(file: UploadFile = File(...), db: Session = Depends(get_d
                     hours = int(row[3]) if row[3] else 2
 
                     if subject_type == "split":
-                        # Bölünmə sayları: "13+12"
                         counts_str = str(row[7]).strip() if row[7] else ""
                         counts = counts_str.split("+") if "+" in counts_str else []
                         if len(counts) < 2:
