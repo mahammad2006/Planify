@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Plus, Pencil, Trash2, Search, Monitor, FlaskConical, School } from "lucide-react";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://planify-production-16ba.up.railway.app";
 
 function Rooms() {
   const [rooms, setRooms] = useState([]);

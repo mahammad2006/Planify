@@ -4,7 +4,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Zap, Download, LayoutGrid, List, Filter } from "lucide-react";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://planify-production-16ba.up.railway.app";
 const DAYS = ["Bazar ertəsi", "Çərşənbə axşamı", "Çərşənbə", "Cümə axşamı", "Cümə"];
 const SLOTS = ["1-ci dərs", "2-ci dərs", "3-cü dərs", "4-cü dərs", "5-ci dərs"];
 const MORNING_TIMES   = ["08:30-10:00", "10:10-11:40", "11:50-13:20", "13:30-15:00", "15:10-16:40"];
