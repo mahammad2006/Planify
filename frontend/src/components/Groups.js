@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Plus, Pencil, Trash2, Search, Sun, Sunset, Ban, Bot, CheckCircle } from "lucide-react";
 
-const API = "http://planify-production-16ba.up.railway.app";
+const API = "https://planify-production-16ba.up.railway.app";
 const DAY_NAMES = ["Bazar ertəsi", "Çərşənbə axşamı", "Çərşənbə", "Cümə axşamı", "Cümə"];
 
 function Groups() {

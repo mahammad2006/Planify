@@ -3,7 +3,7 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-const API = "http://planify-production-16ba.up.railway.app";
+const API = "https://planify-production-16ba.up.railway.app";
 
 function Import() {
   const [file, setFile] = useState(null);
